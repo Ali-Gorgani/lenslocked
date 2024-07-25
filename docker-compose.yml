@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: postgres
+    image: postgres:16.3-alpine3.20
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 110963
+      POSTGRES_DB: lenslocked
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: always
+    ports:
+      - 3333:8080
+    environment:
+      ADMINER_DESIGN: dracula
+
+volumes:
+  postgres_data:
