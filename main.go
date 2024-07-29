@@ -30,8 +30,13 @@ func main() {
 		DB: db,
 	}
 
+	sessionService := models.SessionService{
+		DB: db,
+	}
+
 	userC := controllers.Users{
-		UserService: &userService,
+		UserService:    &userService,
+		SessionService: &sessionService,
 	}
 	userC.Template.New = views.Must(views.ParseFS(templates.Fs, "signup.gohtml", "tailwind.gohtml"))
 	userC.Template.SignIn = views.Must(views.ParseFS(templates.Fs, "signin.gohtml", "tailwind.gohtml"))
@@ -48,7 +53,7 @@ func main() {
 
 	fmt.Println("Server is running on port 8080")
 
-	CsrfAuthKey := "aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV"		
+	CsrfAuthKey := "aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV"
 	CsrfMw := csrf.Protect([]byte(CsrfAuthKey))
 	err = http.ListenAndServe(":8080", CsrfMw(r))
 	if err != nil {
