@@ -1,27 +1,42 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+
+	"github.com/Ali-Gorgani/lenslocked/models"
+	"github.com/joho/godotenv"
+)
 
 func main() {
-	arr := []int{4, 7, 2, 9, 7, 4, 9}
-	
-	// Count occurrences of each number
-	countMap := make(map[int]int)
-	for _, num := range arr {
-		countMap[num]++
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
 
-	fmt.Println(countMap)
-	
-	// Create a new slice with numbers that don't repeat odd times
-	result := []int{}
-	for _, num := range arr {
-		if countMap[num]%2 == 0 {
-			result = append(result, num)
-		}
+	host := os.Getenv("SMTP_HOST")
+	portStr := os.Getenv("SMTP_PORT")
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		panic(err)
 	}
+	username := os.Getenv("SMTP_USERNAME")
+	password := os.Getenv("SMTP_PASSWORD")
 
-	fmt.Println(result)
+	es := models.NewEmailService(
+		models.SMTPConfig{
+			Host:     host,
+			Port:     port,
+			Username: username,
+			Password: password,
+		},
+	)
+
+	err = es.ForgotPassword("3JpjL@example.com", "http://localhost:8080/reset")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Email sent!")
 }
-
-
