@@ -1,0 +1,13 @@
+{{template "header" .}}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+    <h1 class="text-4xl font-semibold tracking-tight text-gray-900 mb-4 text-center">Check Your Email</h1>
+    <p class="text-gray-600 leading-relaxed">
+      We've sent an email with further instructions to email address {{.Email}}. Please check your inbox and follow the provided link to complete the process.
+    </p>
+    <div class="mt-6">
+      <a href="/" class="text-blue-600 hover:text-blue-800 font-medium">Return to Home</a>
+    </div>
+  </div>
+</div>
+{{template "footer" .}}
