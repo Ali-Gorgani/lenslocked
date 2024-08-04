@@ -2,6 +2,7 @@ package views
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -13,6 +14,10 @@ import (
 	"github.com/Ali-Gorgani/lenslocked/models"
 	"github.com/gorilla/csrf"
 )
+
+type public interface {
+	Public() string
+}
 
 func Must(t Template, err error) Template {
 	if err != nil {
@@ -32,11 +37,7 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 				return "", fmt.Errorf("currentUser: not implemented")
 			},
 			"errors": func() []string {
-				return []string {
-					"Error 1",
-					"Error 2",
-					"Error 3",
-				}
+				return nil
 			},
 		},
 	)
@@ -48,25 +49,18 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 	return Template{htmlTpl: tpl}, nil
 }
 
-func Parse(filePath string) (Template, error) {
-	tpl, err := template.ParseFiles(filePath)
-	if err != nil {
-		return Template{}, fmt.Errorf("parsing template: %w", err)
-	}
-	return Template{htmlTpl: tpl}, nil
-}
-
 type Template struct {
 	htmlTpl *template.Template
 }
 
-func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}) {
+func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface{}, errs ...error) {
 	tpl, err := t.htmlTpl.Clone()
 	if err != nil {
 		log.Printf("Cloning template: %v", err)
 		http.Error(w, "There was an error rendering the page.", http.StatusInternalServerError)
 		return
 	}
+	errMsgs := errMessages(errs...)
 	tpl = tpl.Funcs(
 		template.FuncMap{
 			"csrfField": func() template.HTML {
@@ -74,6 +68,9 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 			},
 			"currentUser": func() *models.User {
 				return context.User(r.Context())
+			},
+			"errors": func() []string {
+				return errMsgs
 			},
 		},
 	)
@@ -87,4 +84,18 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 		return
 	}
 	io.Copy(w, &buf)
+}
+
+func errMessages(errs ...error) []string {
+	var publicErrs []string
+	for _, err := range errs {
+		var publicErr public
+		if errors.As(err, &publicErr) {
+			publicErrs = append(publicErrs, publicErr.Public())
+		} else {
+			fmt.Println(err)
+			publicErrs = append(publicErrs, "Something went wrong. Please try again.")
+		}
+	}
+	return publicErrs
 }

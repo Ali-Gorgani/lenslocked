@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/Ali-Gorgani/lenslocked/context"
+	"github.com/Ali-Gorgani/lenslocked/errors"
 	"github.com/Ali-Gorgani/lenslocked/models"
 )
 
@@ -33,16 +34,20 @@ func (u Users) New(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) Create(w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-	if email == "" || password == "" {
-		http.Error(w, "Email and password are required", http.StatusBadRequest)
-		return
+	var data struct {
+		Email    string
+		Password string
 	}
-	user, err := u.UserService.Create(email, password)
+
+	data.Email = r.FormValue("email")
+	data.Password = r.FormValue("password")
+
+	user, err := u.UserService.Create(data.Email, data.Password)
 	if err != nil {
-		log.Printf("Error creating user: %v", err)
-		http.Error(w, "Something went wrong in creating user. Try again?", http.StatusInternalServerError)
+		if errors.Is(err, models.ErrEmailTaken) {
+			err = errors.Public(err, "This email address is already associated with an account.")
+		}
+		u.Template.New.Execute(w, r, data, err)
 		return
 	}
 	session, err := u.SessionService.Create(user.ID)
@@ -189,7 +194,7 @@ func (u Users) ProcessResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setCookie(w, CookieSession, session.Token)
-	http.Redirect(w, r, "/users/me", http.StatusFound) 
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
 type UserMiddleware struct {
