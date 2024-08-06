@@ -26,10 +26,10 @@ type SMTPConfig struct {
 }
 
 func NewEmailService(config SMTPConfig) *EmailService {
-	es := EmailService{
+	service := EmailService{
 		dialer: mail.NewDialer(config.Host, config.Port, config.Username, config.Password),
 	}
-	return &es
+	return &service
 }
 
 type EmailService struct {
@@ -40,9 +40,9 @@ type EmailService struct {
 	dialer *mail.Dialer
 }
 
-func (es *EmailService) Send(email Email) error {
+func (service *EmailService) Send(email Email) error {
 	msg := mail.NewMessage()
-	es.setFrom(msg, email)
+	service.setFrom(msg, email)
 	msg.SetHeader("To", email.To)
 	msg.SetHeader("Subject", email.Subject)
 	switch {
@@ -55,33 +55,33 @@ func (es *EmailService) Send(email Email) error {
 		msg.SetBody("text/html", email.HTML)
 	}
 
-	err := es.dialer.DialAndSend(msg)
+	err := service.dialer.DialAndSend(msg)
 	if err != nil {
 		return fmt.Errorf("send: %w", err)
 	}
 	return nil
 }
 
-func (es *EmailService) ForgotPassword(to, resetURL string) error {
+func (service *EmailService) ForgotPassword(to, resetURL string) error {
 	email := Email{
 		To:      to,
 		Subject: "Lenslocked Password Reset",
 		HTML:    fmt.Sprintf("Click <a href=\"%s\">here</a> to reset your password.", resetURL),
 	}
-	err := es.Send(email)
+	err := service.Send(email)
 	if err != nil {
 		return fmt.Errorf("forgotPassword: %w", err)
 	}
 	return nil
 }
 
-func (es *EmailService) setFrom(msg *mail.Message, email Email) {
+func (service *EmailService) setFrom(msg *mail.Message, email Email) {
 	var from string
 	switch {
 	case email.From != "":
 		from = email.From
-	case es.DefaultSender != "":
-		from = es.DefaultSender
+	case service.DefaultSender != "":
+		from = service.DefaultSender
 	default:
 		from = DefaultSender
 	}

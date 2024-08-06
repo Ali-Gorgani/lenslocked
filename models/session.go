@@ -30,8 +30,8 @@ type SessionService struct {
 	BytesPerToken int
 }
 
-func (ss *SessionService) Create(userID int) (*Session, error) {
-	bytesPerToken := ss.BytesPerToken
+func (service *SessionService) Create(userID int) (*Session, error) {
+	bytesPerToken := service.BytesPerToken
 	if bytesPerToken < MinBytesPerToken {
 		bytesPerToken = MinBytesPerToken
 	}
@@ -40,7 +40,7 @@ func (ss *SessionService) Create(userID int) (*Session, error) {
 		return nil, fmt.Errorf("Create sessionToken: %w", err)
 	}
 
-	tokenHash := ss.hash(token)
+	tokenHash := service.hash(token)
 
 	session := Session{
 		UserID:    userID,
@@ -48,7 +48,7 @@ func (ss *SessionService) Create(userID int) (*Session, error) {
 		TokenHash: tokenHash,
 	}
 
-	row := ss.DB.QueryRow(`
+	row := service.DB.QueryRow(`
 		INSERT INTO sessions (user_id, token_hash)
 		VALUES ($1, $2) ON CONFLICT (user_id) DO
 		UPDATE
@@ -63,10 +63,10 @@ func (ss *SessionService) Create(userID int) (*Session, error) {
 	return &session, nil
 }
 
-func (ss *SessionService) User(token string) (*User, error) {
-	tokenHash := ss.hash(token)
+func (service *SessionService) User(token string) (*User, error) {
+	tokenHash := service.hash(token)
 
-	row := ss.DB.QueryRow(`
+	row := service.DB.QueryRow(`
 		SELECT users.id,
 			users.email,
 			users.password_hash
@@ -84,9 +84,9 @@ func (ss *SessionService) User(token string) (*User, error) {
 	return &user, nil
 }
 
-func (ss *SessionService) Delete(token string) error {
-	tokenHash := ss.hash(token)
-	_, err := ss.DB.Exec("DELETE FROM sessions WHERE token_hash = $1", tokenHash)
+func (service *SessionService) Delete(token string) error {
+	tokenHash := service.hash(token)
+	_, err := service.DB.Exec("DELETE FROM sessions WHERE token_hash = $1", tokenHash)
 	if err != nil {
 		return fmt.Errorf("Delete session: %w", err)
 	}

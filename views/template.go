@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path"
 
 	"github.com/Ali-Gorgani/lenslocked/context"
 	"github.com/Ali-Gorgani/lenslocked/models"
@@ -27,7 +28,7 @@ func Must(t Template, err error) Template {
 }
 
 func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
-	tpl := template.New(patterns[0])
+	tpl := template.New(path.Base(patterns[0]))
 	tpl = tpl.Funcs(
 		template.FuncMap{
 			"csrfField": func() (template.HTML, error) {
@@ -38,6 +39,9 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 			},
 			"errors": func() []string {
 				return nil
+			},
+			"equal": func(a, b interface{}) bool {
+				return false
 			},
 		},
 	)
@@ -71,6 +75,9 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 			},
 			"errors": func() []string {
 				return errMsgs
+			},
+			"equal": func(a, b interface{}) bool {
+				return a == b
 			},
 		},
 	)
