@@ -23,7 +23,7 @@ func DefultPostgresConfig() PostgresConfig {
 		Host:     "localhost",
 		Port:     "5432",
 		User:     "root",
-		Password: "110963",
+		Password: "secret",
 		Database: "lenslocked",
 		SSLMode:  "disable",
 	}
