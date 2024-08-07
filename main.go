@@ -153,6 +153,7 @@ func main() {
 	})
 	r.Route("/galleries", func(r chi.Router) {
 		r.Get("/{id}", galleryC.Show)
+		r.Get("/{id}/images/{filename}", galleryC.Image)
 		r.Group(func(r chi.Router) {
 			r.Use(umw.RequireUser)
 			r.Get("/", galleryC.Index)
@@ -161,6 +162,8 @@ func main() {
 			r.Get("/{id}/edit", galleryC.Edit)
 			r.Post("/{id}", galleryC.Update)
 			r.Post("/{id}/delete", galleryC.Delete)
+			r.Post("/{id}/images/{filename}/delete", galleryC.DeleteImage)
+			r.Post("/{id}/images/upload", galleryC.UploadImage)
 		})
 	})
 

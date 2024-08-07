@@ -2,9 +2,10 @@
 <div class="p-4">
     <div
         class="flex justify-between items-center bg-gradient-to-b from-red-200 to-blue-200 p-4 m-2 rounded-md shadow-md">
+        {{if currentUser}}
+        {{if equal currentUser.ID .UserID}}
         <div class="flex items-center space-x-4">
-            <h1 class="text-4xl font-bold text-gray-800 text-center">{{.Title}}</h1>
-            {{if equal currentUser.ID .UserID}}
+            <h1 class="text-4xl font-bold text-gray-800">{{.Title}}</h1>
             <a href="/galleries/{{.ID}}/edit"
                 class="px-3 py-1 rounded-full bg-green-500 text-white hover:bg-green-600 transition duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20"
@@ -31,24 +32,16 @@
                 </button>
             </form>
         </div>
-        <div>
-            <a href="/galleries/{{.ID}}/images/new"
-                class="inline-flex items-center px-4 py-2 border rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition duration-300 ease-in-out">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                        clip-rule="evenodd" />
-                </svg>
-                Add Photo
-            </a>
-        </div>
+        {{end}}
+        {{else}}
+        <h1 class="text-4xl font-bold text-gray-800">{{.Title}}</h1>
         {{end}}
     </div>
     <div class="columns-4 gap-4 space-y-4 pb-4">
         {{range .Images}}
         <div class="h-min w-full">
-            <a href="{{.}}">
-                <img src="{{.}}" class="w-full rounded-lg" alt="Image">
+            <a href="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}">
+                <img src="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}" class="w-full rounded-lg" alt="Image">
             </a>
         </div>
         {{end}}

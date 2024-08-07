@@ -6,17 +6,124 @@
         <div class="hidden">
             {{csrfField}}
         </div>
-        <div>
-            <label for="title" class="block text-sm font-semibold text-gray-700">Title:</label>
-            <input type="text" id="title" name="title" placeholder="Enter your gallery name" value="{{.Title}}" autofocus required
-                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-        </div>
-        <div>
-            <button type="submit"
-                class="w-full px-4 py-2 text-white bg-indigo-500 rounded-md hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600">
-                Update
-            </button>
+        <div class="p-2">
+            <label for="title" class="text-sm font-semibold text-gray-700">Title:</label>
+            <div class="flex items-center justify-center mx-auto">
+                <input type="text" id="title" name="title" placeholder="Enter your gallery name" value="{{.Title}}"
+                    autofocus required
+                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <span class="ml-2">
+                    <button type="submit"
+                        class="w-32 px-4 py-2 text-white bg-indigo-500 rounded-md hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600">
+                        Update
+                    </button>
+                </span>
+            </div>
         </div>
     </form>
+    <div class="mt-8 w-48 mx-auto border-b-4 border-indigo-500"></div>
+    <div class="py-4">
+        <h2 class="flex justify-center mx-auto w-48 pb-2 text-sm font-semibold text-gray-800 shadow shadow-md ">Current
+            Images</h2>
+        <div class="mt-4 py-4>">
+            {{template "upload_image_form" .}}
+        </div>
+        <div class="py-2 grid grid-cols-8 gap-2">
+            {{range .Images}}
+            <div class="h-min w-full relative">
+                <div class="absolute top-1 right-1">
+                    {{template "delete_image_form" .}}
+                </div>
+                <a href="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}">
+                    <img src="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}" class="w-full rounded-lg"
+                        alt="Image">
+                </a>
+            </div>
+            {{end}}
+        </div>
+    </div>
+    <div class="mt-8 w-48 mx-auto border-b-4 border-red-500"></div>
+    <div class="py-4">
+        <h2 class="flex justify-center mx-auto w-48 pb-2 text-sm font-semibold text-red-800 shadow shadow-md">Dangerous
+            Actions</h2>
+        <div class="mt-4 flex justify-center">
+            <form action="/galleries/{{.ID}}/delete" method="POST"
+                onsubmit="return confirm('Are you sure you want to delete this gallery? This action cannot be undone.');">
+                <div class="hidden">
+                    {{csrfField}}
+                </div>
+                <button type="submit"
+                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                    Delete Gallery
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 {{template "footer" .}}
+
+{{define "delete_image_form"}}
+<form action="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}/delete" method="POST"
+    onsubmit="return confirm('Are you sure you want to delete this image?');">
+    <div class="hidden">
+        {{csrfField}}
+    </div>
+    <button type="submit"
+        class="p-1 bg-red-200 border border-red-400 text-white rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+</form>
+{{end}}
+
+{{define "upload_image_form"}}
+<form action="/galleries/{{.ID}}/images/upload" method="POST" enctype="multipart/form-data"
+    class="flex flex-col items-center">
+    <div class="hidden">
+        {{csrfField}}
+    </div>
+    <div class="flex flex-col items-center">
+        <input type="file" id="imageUpload" name="images" accept="image/png, image/jpeg, image/gif" multiple
+            class="hidden" onchange="updateLabel(this)">
+        <label for="imageUpload"
+            class="px-4 py-2 border rounded-lg bg-blue-500 text-white hover:bg-blue-800 transition duration-300 cursor-pointer">
+            <div class="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path id="crossIcon" fill-rule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clip-rule="evenodd" />
+                    <path id="tickIcon" fill="none" stroke="currentColor" stroke-width="2" d="M5 10l4 4 8-8"
+                        style="display: none;" />
+                </svg>
+                <span id="uploadText">Choose Photo</span>
+            </div>
+            <p class="text-sm mt-2">Please only upload JPG, JPEG, PNG, or GIF files.</p>
+        </label>
+    </div>
+    <button type="submit"
+        class="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300">
+        Upload
+    </button>
+
+    <script>
+        function updateLabel(input) {
+            const uploadText = document.getElementById('uploadText');
+            const crossIcon = document.getElementById('crossIcon');
+            const tickIcon = document.getElementById('tickIcon');
+
+            if (input.files.length > 0) {
+                uploadText.textContent = input.files.length > 1 ? `${input.files.length} files selected` : input.files[0].name;
+                crossIcon.style.display = 'none';
+                tickIcon.style.display = 'block';
+            } else {
+                uploadText.textContent = 'Upload Photo';
+                crossIcon.style.display = 'block';
+                tickIcon.style.display = 'none';
+            }
+        }
+    </script>
+</form>
+
+
+{{end}}
