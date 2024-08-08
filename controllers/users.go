@@ -99,11 +99,6 @@ func (u Users) ProcessSignIn(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
-func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	user := context.User(r.Context())
-	fmt.Fprintf(w, "Current user: %v", user)
-}
-
 func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	token, err := readCookie(r, CookieSession)
 	if err != nil {

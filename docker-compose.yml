@@ -3,7 +3,7 @@ version: "3.9"
 services:
   db:
     container_name: postgres
-    image: postgres:16.3-alpine3.20
+    image: postgres:alpine
     restart: always
     environment:
       POSTGRES_USER: root

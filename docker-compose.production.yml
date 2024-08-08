@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./Images:/app/Images
+    depends_on:
+      - db
+
+  Caddy:
+    image: caddy:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - server
+      - db

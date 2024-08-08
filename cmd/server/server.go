@@ -75,17 +75,23 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = run(cfg)
+	if err != nil {
+		panic(err)
+	}
+}
 
+func run(cfg config) error {
 	// Setup the database
 	db, err := models.Open(cfg.PSQL)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	err = models.MigrateFS(db, migrations.FS, ".")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Setup the services
@@ -156,10 +162,6 @@ func main() {
 	r.Post("/forgot-password", userC.ProcessForgotPassword)
 	r.Get("/reset-password", userC.ResetPassword)
 	r.Post("/reset-password", userC.ProcessResetPassword)
-	r.Route("/users", func(r chi.Router) {
-		r.Use(umw.RequireUser)
-		r.Get("/me", userC.CurrentUser)
-	})
 	r.Route("/galleries", func(r chi.Router) {
 		r.Get("/{id}", galleryC.Show)
 		r.Get("/{id}/images/{filename}", galleryC.Image)
@@ -175,6 +177,8 @@ func main() {
 			r.Post("/{id}/images/upload", galleryC.UploadImage)
 		})
 	})
+	assetsHandler := http.FileServer(http.Dir("assets"))
+	r.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
@@ -182,8 +186,5 @@ func main() {
 
 	// Start the server
 	fmt.Println("Server is running on port ", cfg.Server.Address)
-	err = http.ListenAndServe(cfg.Server.Address, r)
-	if err != nil {
-		panic(err)
-	}
+	return http.ListenAndServe(cfg.Server.Address, r)
 }

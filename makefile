@@ -16,6 +16,9 @@ TYPE := sql
 	@true
 
 tailwind:
-	npx tailwindcss -i tailwind/style.css -o ../assets/styles.css --watch
+	npx tailwindcss -i tailwind/styles.css -o ../assets/styles.css --watch
+
+docker-compose-up-and-build:
+	docker compose -f docker-compose.yml -f docker-compose.production.yml up --build
 
 .PHONY: docker-compose-db goose goose-create
