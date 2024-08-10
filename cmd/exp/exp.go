@@ -1,42 +1,69 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
+	"strings"
 
-	"github.com/Ali-Gorgani/lenslocked/models"
 	"github.com/joho/godotenv"
+	"golang.org/x/oauth2"
 )
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal(err)
 	}
 
-	host := os.Getenv("SMTP_HOST")
-	portStr := os.Getenv("SMTP_PORT")
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		panic(err)
-	}
-	username := os.Getenv("SMTP_USERNAME")
-	password := os.Getenv("SMTP_PASSWORD")
+	// Load environment variables from .env file
+	dropboxID := os.Getenv("DROPBOX_APP_KEY")
+	dropboxSecret := os.Getenv("DROPBOX_APP_SECRET")
 
-	es := models.NewEmailService(
-		models.SMTPConfig{
-			Host:     host,
-			Port:     port,
-			Username: username,
-			Password: password,
+	ctx := context.Background()
+	config := oauth2.Config{
+		ClientID:     dropboxID,
+		ClientSecret: dropboxSecret,
+		Scopes: []string{
+			"files.metadata.read",
+			"files.content.read",
 		},
-	)
-
-	err = es.ForgotPassword("3JpjL@example.com", "http://localhost:8080/reset")
-	if err != nil {
-		panic(err)
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://www.dropbox.com/oauth2/authorize",
+			TokenURL: "https://api.dropboxapi.com/oauth2/token",
+		},
 	}
-	fmt.Println("Email sent!")
+
+	url := config.AuthCodeURL(
+		"state",
+		oauth2.SetAuthURLParam("token_access_type", "offline"),
+	)
+	fmt.Printf("Visit the URL for the auth dialog: %v\n", url)
+	fmt.Println("Then paste the code here: ")
+
+	var code string
+	if _, err := fmt.Scan(&code); err != nil {
+		log.Fatal(err)
+	}
+	token, err := config.Exchange(ctx, code)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := config.Client(ctx, token)
+	resp, err := client.Post(
+		"https://api.dropboxapi.com/2/files/list_folder",
+		"application/json",
+		strings.NewReader(`{"path": ""}`),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	enc.Encode(token)
 }
