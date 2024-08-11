@@ -197,6 +197,7 @@ func run(cfg config) error {
 			r.Post("/{id}/delete", galleryC.Delete)
 			r.Post("/{id}/images/{filename}/delete", galleryC.DeleteImage)
 			r.Post("/{id}/images/upload", galleryC.UploadImage)
+			r.Post("/{id}/images/url", galleryC.ImageViaURL)
 		})
 	})
 	r.Route("/oauth/{provider}", func(r chi.Router) {

@@ -22,28 +22,22 @@ func (fe FileError) Error() string {
 	return fe.Issue
 }
 
-func checkContentType(r io.ReadSeeker, allowedTypes []string) error {
+func checkContentType(r io.Reader, allowedTypes []string) ([]byte, error) {
 	// Read the first 512 bytes to detect the content type
 	buffer := make([]byte, 512)
-	_, err := r.Read(buffer)
+	n, err := r.Read(buffer)
 	if err != nil && err != io.EOF {
-		return fmt.Errorf("failed to read the first 512 bytes: %w", err)
-	}
-
-	// Seek back to the beginning of the file
-	_, err = r.Seek(0, io.SeekStart)
-	if err != nil {
-		return fmt.Errorf("failed to seek back to the beginning of the file: %w", err)
+		return nil, fmt.Errorf("failed to read the first 512 bytes: %w", err)
 	}
 
 	contentType := http.DetectContentType(buffer)
 
 	for _, allowedType := range allowedTypes {
 		if contentType == allowedType {
-			return nil
+			return buffer[:n], nil
 		}
 	}
-	return FileError{
+	return nil, FileError{
 		Issue: fmt.Sprintf("invalid file type: %s", contentType),
 	}
 }
